@@ -179,7 +179,6 @@ const dayLabel = (iso, tz) => fmt(iso, tz, { weekday: "long", month: "short", da
 const dayKey = (iso, tz) => fmt(iso, tz, { year: "numeric", month: "numeric", day: "numeric" });
 
 let me = null, picks = new Set(), answers = {}, sending = false, lastSent = null, netErr = "";
-try { me = localStorage.getItem("santa-name"); if (!FRIENDS.some(f => f.name === me)) me = null; } catch (e) {}
 const configured = !ENDPOINT.includes("PASTE_");
 $("setup").hidden = configured;
 
@@ -192,7 +191,7 @@ function renderNames() {
     const s = document.createElement("small"); s.textContent = f.city; b.append(s);
     if ((answers[f.name] || []).length) { const t = document.createElement("span"); t.className = "tick"; t.textContent = "✓"; t.title = "Already answered"; b.append(t); }
     b.onclick = () => {
-      me = f.name; try { localStorage.setItem("santa-name", me); } catch (e) {}
+      me = f.name;
       picks = new Set(answers[me] || []); lastSent = null;
       render();
     };
