@@ -178,7 +178,7 @@ const clock = (iso, tz) => fmt(iso, tz, { hour: "numeric", minute: "2-digit" }).
 const dayLabel = (iso, tz) => fmt(iso, tz, { weekday: "long", month: "short", day: "numeric" });
 const dayKey = (iso, tz) => fmt(iso, tz, { year: "numeric", month: "numeric", day: "numeric" });
 
-let me = null, picks = new Set(), answers = {}, sending = false, lastSent = null;
+let me = null, picks = new Set(), answers = {}, sending = false, lastSent = null, netErr = "";
 try { me = localStorage.getItem("santa-name"); if (!FRIENDS.some(f => f.name === me)) me = null; } catch (e) {}
 const configured = !ENDPOINT.includes("PASTE_");
 $("setup").hidden = configured;
@@ -236,7 +236,7 @@ function renderTally() {
   const counts = SLOTS.map(s => FRIENDS.filter(f => (answers[f.name] || []).includes(s.id)).length);
   const answered = FRIENDS.filter(f => answers[f.name] !== undefined && (answers[f.name] || []).length).length;
   const max = Math.max(0, ...counts);
-  $("tallyNote").textContent = answered + " of " + FRIENDS.length + " have answered.";
+  $("tallyNote").textContent = netErr ? "Can't reach the answer sheet (" + netErr + ")." : answered + " of " + FRIENDS.length + " have answered.";
   if (!answered) { const d = document.createElement("div"); d.className = "empty"; d.textContent = "No answers yet. Be the first."; el.append(d); return; }
   SLOTS.forEach((s, i) => {
     const r = document.createElement("div"); r.className = "row" + (max && counts[i] === max ? " top" : "");
@@ -257,8 +257,8 @@ function renderDock() {
   if (!me) { send.disabled = true; msg.textContent = "Pick your name to start"; return; }
   send.disabled = !configured;
   if (lastSent === "ok") { send.className = "send done"; send.textContent = "Sent ✓"; msg.innerHTML = "<b>Saved, thanks " + me + "!</b> Change your mind? Tap and send again."; return; }
-  if (lastSent === "unsure") { msg.innerHTML = "<b>Sent</b>, but I couldn't confirm it. Refresh in a minute to check."; return; }
-  if (lastSent === "fail") { msg.innerHTML = "<b>That didn't go through.</b> Check your connection and try again."; return; }
+  if (lastSent === "unsure") { msg.innerHTML = "<b>Sent</b>, but I couldn't confirm it. Refresh in a minute to check."; if (netErr) msg.append(" (" + netErr + ")"); return; }
+  if (lastSent === "fail") { msg.innerHTML = "<b>That didn't go through.</b> Check your connection and try again."; if (netErr) msg.append(" (" + netErr + ")"); return; }
   const n = picks.size;
   msg.innerHTML = "<b>" + me + "</b>: " + (n ? n + (n === 1 ? " time" : " times") + " picked" : "no times picked yet");
 }
@@ -271,8 +271,9 @@ async function loadAnswers() {
     const r = await fetch(ENDPOINT + "?t=" + Date.now());
     const j = await r.json();
     answers = j.answers || {};
+    netErr = "";
     if (me && !lastSent && picks.size === 0) picks = new Set(answers[me] || []);
-  } catch (e) { /* keep page usable without the tally */ }
+  } catch (e) { netErr = "load: " + (e && e.message || e); }
   render();
 }
 
@@ -282,12 +283,14 @@ $("send").onclick = async () => {
   const mine = SLOTS.map(s => s.id).filter(id => picks.has(id));
   try {
     await fetch(ENDPOINT, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: me, slots: mine }) });
+  } catch (e) { netErr = "send: " + (e && e.message || e); lastSent = "fail"; sending = false; render(); return; }
+  try {
     await new Promise(r => setTimeout(r, 1500));
     const r = await fetch(ENDPOINT + "?t=" + Date.now()); const j = await r.json();
-    answers = j.answers || answers;
+    answers = j.answers || answers; netErr = "";
     const saved = (answers[me] || []).slice().sort().join(",");
     lastSent = saved === mine.slice().sort().join(",") ? "ok" : "unsure";
-  } catch (e) { lastSent = "fail"; }
+  } catch (e) { netErr = "check: " + (e && e.message || e); lastSent = "unsure"; }
   sending = false; render();
 };
 
