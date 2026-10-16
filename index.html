@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Secret Santa on Zoom</title>
+<meta name="description" content="Tap your name, tap the times that work, hit send.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,600&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* One committed look: evergreen night, cream cards, cranberry / Hanukkah blue / gold accents. */
+:root {
+  --night: #12342a;
+  --night-2: #1a4538;
+  --card: #fffdf8;
+  --ink: #1b2b24;
+  --muted: #5d6e66;
+  --line: #e6e0d2;
+  --cran: #b3283f;
+  --cran-soft: #f8e4e8;
+  --blue: #1d5fa8;
+  --blue-soft: #e1ecf8;
+  --gold: #d9a441;
+  --gold-soft: #fbf0d6;
+  --pine: #1f6b4a;
+  --pine-soft: #dcefe4;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { background: var(--night); }
+body {
+  margin: 0; color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  background: var(--night);
+  background-image: radial-gradient(rgba(255,255,255,.07) 1.2px, transparent 1.4px);
+  background-size: 34px 34px;
+  padding-bottom: 110px;
+}
+.wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { padding-block: 44px 26px; color: #fff; text-align: left; }
+.eyebrow { font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.6rem, 11vw, 3.6rem); line-height: .98; letter-spacing: -.02em; margin: 10px 0 12px; text-wrap: balance; }
+h1 em { font-style: italic; font-weight: 600; color: var(--gold); }
+header p { margin: 0; color: #cfe3d8; max-width: 38ch; font-size: 1.05rem; }
+.emoji { font-size: 1.6rem; letter-spacing: .3em; display: block; margin-top: 16px; }
+
+.card { background: var(--card); border-radius: 22px; padding: 22px 18px; display: grid; gap: 30px; box-shadow: 0 18px 40px rgba(0,0,0,.3); }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.35rem; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+h2 .n { width: 28px; height: 28px; border-radius: 50%; background: var(--cran); color: #fff; font-family: var(--body); font-weight: 700; font-size: .9rem; display: inline-grid; place-items: center; flex: none; }
+.sub { color: var(--muted); font-size: .9rem; margin: 0 0 14px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 9px; }
+.chip { font: inherit; font-weight: 600; cursor: pointer; border: 2px solid var(--line); background: #fff; color: var(--ink); padding: 11px 16px; border-radius: 999px; min-height: 46px; display: inline-flex; align-items: baseline; gap: 7px; }
+.chip small { font-weight: 500; color: var(--muted); font-size: .8rem; }
+.chip[aria-pressed="true"] { background: var(--cran); border-color: var(--cran); color: #fff; }
+.chip[aria-pressed="true"] small { color: #ffd9df; }
+.chip .tick { font-size: .8rem; color: var(--pine); }
+.chip[aria-pressed="true"] .tick { color: #fff; }
+
+.day { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 1.05rem; color: var(--muted); margin: 18px 0 8px; }
+.day:first-child { margin-top: 0; }
+.slot { width: 100%; text-align: left; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 14px; border: 2px solid var(--line); background: #fff; color: var(--ink); border-radius: 16px; padding: 13px 14px; margin-bottom: 9px; min-height: 68px; }
+.slot .t { font-family: var(--display); font-weight: 800; font-size: 1.55rem; line-height: 1; min-width: 3.9ch; font-variant-numeric: tabular-nums; }
+.slot .z { font-size: .78rem; color: var(--muted); line-height: 1.35; flex: 1; min-width: 0; }
+.slot .z b { color: var(--ink); font-weight: 600; }
+.slot .box { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; color: transparent; font-weight: 800; }
+.slot[aria-pressed="true"] { border-color: var(--pine); background: var(--pine-soft); }
+.slot[aria-pressed="true"] .box { background: var(--pine); border-color: var(--pine); color: #fff; }
+.slot[data-d="0"][aria-pressed="false"] { border-left: 8px solid var(--pine); }
+.slot[data-d="1"][aria-pressed="false"] { border-left: 8px solid var(--cran); }
+.slot[data-d="2"][aria-pressed="false"] { border-left: 8px solid var(--blue); }
+.slot[aria-pressed="true"][data-d="0"] { border-left: 8px solid var(--pine); }
+.slot[aria-pressed="true"][data-d="1"] { border-left: 8px solid var(--cran); }
+.slot[aria-pressed="true"][data-d="2"] { border-left: 8px solid var(--blue); }
+.locked { opacity: .5; }
+
+.row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row .lbl { font-weight: 600; font-size: .95rem; }
+.row .num { font-family: var(--display); font-weight: 800; font-size: 1.3rem; }
+.row .bar { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.row .bar i { display: block; height: 100%; background: var(--pine); border-radius: 99px; }
+.row .who { grid-column: 1 / -1; font-size: .78rem; color: var(--muted); }
+.row.top .lbl::after { content: "  ★ front-runner"; color: var(--gold); font-size: .78rem; font-weight: 700; }
+.row.top .bar i { background: var(--gold); }
+.empty { color: var(--muted); font-size: .92rem; }
+
+.notice { background: var(--gold-soft); border: 1px solid var(--gold); color: #6b4a07; border-radius: 12px; padding: 10px 14px; font-size: .88rem; }
+
+.dock { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: rgba(18,52,42,.94); backdrop-filter: blur(8px); }
+.dock .in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+.dock .msg { color: #cfe3d8; font-size: .92rem; flex: 1; min-width: 0; }
+.dock .msg b { color: #fff; }
+.send { font: inherit; font-weight: 700; font-size: 1.05rem; border: 0; border-radius: 999px; padding: 14px 28px; background: var(--gold); color: #2b1f05; cursor: pointer; min-height: 50px; }
+.send:disabled { background: #46665a; color: #9db5aa; cursor: not-allowed; }
+.send.done { background: var(--pine-soft); color: var(--pine); }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .chip, .slot, .send { transition: background .15s, border-color .15s, transform .1s; }
+  .slot:active, .chip:active { transform: scale(.985); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Zoom gift swap · Dec 4–6</div>
+    <h1>Secret <em>Santa</em></h1>
+    <p>Pick your name, tap every time that works for you, hit send. That's it.</p>
+    <span class="emoji" aria-hidden="true">🎄 🎁 🕎</span>
+  </header>
+
+  <main class="card">
+    <div class="notice" id="setup" hidden>Almost ready: this page isn't connected to the answer sheet yet.</div>
+
+    <section aria-labelledby="h1a">
+      <h2 id="h1a"><span class="n">1</span>Who are you?</h2>
+      <div class="chips" id="names"></div>
+    </section>
+
+    <section aria-labelledby="h2a">
+      <h2 id="h2a"><span class="n">2</span>Tap every time that works</h2>
+      <p class="sub" id="tzNote">Times show in your own time zone. Leave a time blank if it doesn't work.</p>
+      <div id="slots"></div>
+    </section>
+
+    <section aria-labelledby="h3a">
+      <h2 id="h3a"><span class="n">3</span>Where everyone stands</h2>
+      <p class="sub" id="tallyNote">Updates after anyone sends.</p>
+      <div id="tally"><div class="empty">Loading…</div></div>
+    </section>
+  </main>
+</div>
+
+<div class="dock">
+  <div class="in">
+    <div class="msg" id="msg">Pick your name to start</div>
+    <button class="send" id="send" type="button" disabled>Send</button>
+  </div>
+</div>
+
+<script>
+/* The one setting: the Apps Script web app URL that saves answers into the sheet. */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyyIp7uWahU002gpTtT1ajiWJmzhU97TGecVVSW-YZrYCphPfUFlgcJxkLZtnVUDucP/exec";
+
+const FRIENDS = [
+  { name: "Anni",     city: "Tokyo" },
+  { name: "Annika",   city: "Seattle" },
+  { name: "Lauren H", city: "Portland" },
+  { name: "Lisa",     city: "Denver" },
+  { name: "Emmy",     city: "Carbondale" },
+  { name: "Lauren M", city: "Atlanta" },
+  { name: "Jess",     city: "Maryland" },
+];
+// Same eight times as the sheet, in UTC (December, standard time). Order matches sheet columns B to I.
+const SLOTS = [
+  { id: "s1", utc: "2026-12-04T23:00:00Z" },
+  { id: "s2", utc: "2026-12-05T00:00:00Z" },
+  { id: "s3", utc: "2026-12-05T01:00:00Z" },
+  { id: "s4", utc: "2026-12-05T22:00:00Z" },
+  { id: "s5", utc: "2026-12-05T23:00:00Z" },
+  { id: "s6", utc: "2026-12-06T00:00:00Z" },
+  { id: "s7", utc: "2026-12-06T22:00:00Z" },
+  { id: "s8", utc: "2026-12-06T23:00:00Z" },
+];
+const ZONES = [
+  { label: "PT", tz: "America/Los_Angeles" },
+  { label: "MT", tz: "America/Denver" },
+  { label: "ET", tz: "America/New_York" },
+  { label: "Tokyo", tz: "Asia/Tokyo", day: true },
+];
+const myTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Denver"; } catch (e) { return "America/Denver"; } })();
+
+const $ = id => document.getElementById(id);
+const fmt = (iso, tz, o) => new Intl.DateTimeFormat("en-US", { timeZone: tz, ...o }).format(new Date(iso));
+const clock = (iso, tz) => fmt(iso, tz, { hour: "numeric", minute: "2-digit" }).replace(":00", "").replace(" AM", "am").replace(" PM", "pm");
+const dayLabel = (iso, tz) => fmt(iso, tz, { weekday: "long", month: "short", day: "numeric" });
+const dayKey = (iso, tz) => fmt(iso, tz, { year: "numeric", month: "numeric", day: "numeric" });
+
+let me = null, picks = new Set(), answers = {}, sending = false, lastSent = null;
+try { me = localStorage.getItem("santa-name"); if (!FRIENDS.some(f => f.name === me)) me = null; } catch (e) {}
+const configured = !ENDPOINT.includes("PASTE_");
+$("setup").hidden = configured;
+
+function renderNames() {
+  const el = $("names"); el.innerHTML = "";
+  FRIENDS.forEach(f => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(f.name === me));
+    b.append(f.name + " ");
+    const s = document.createElement("small"); s.textContent = f.city; b.append(s);
+    if ((answers[f.name] || []).length) { const t = document.createElement("span"); t.className = "tick"; t.textContent = "✓"; t.title = "Already answered"; b.append(t); }
+    b.onclick = () => {
+      me = f.name; try { localStorage.setItem("santa-name", me); } catch (e) {}
+      picks = new Set(answers[me] || []); lastSent = null;
+      render();
+    };
+    el.append(b);
+  });
+}
+
+function renderSlots() {
+  const el = $("slots"); el.innerHTML = "";
+  const dayIndex = {}; let nextIdx = 0, last = "";
+  SLOTS.forEach(s => {
+    const k = dayKey(s.utc, myTz);
+    if (k !== last) {
+      const h = document.createElement("div"); h.className = "day"; h.textContent = dayLabel(s.utc, myTz); el.append(h); last = k;
+    }
+    // colour stripe by US evening date (Fri / Sat / Sun), same for every viewer
+    const usDay = fmt(s.utc, "America/Los_Angeles", { weekday: "short" });
+    const d = usDay === "Fri" ? 0 : usDay === "Sat" ? 1 : 2;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "slot" + (me ? "" : " locked"); b.dataset.d = d;
+    b.setAttribute("aria-pressed", String(picks.has(s.id)));
+    const t = document.createElement("div"); t.className = "t"; t.textContent = clock(s.utc, myTz);
+    const z = document.createElement("div"); z.className = "z";
+    ZONES.forEach((zz, i) => {
+      if (i) z.append(" · ");
+      const bold = document.createElement("b"); bold.textContent = zz.label; z.append(bold, " " + (zz.day ? fmt(s.utc, zz.tz, { weekday: "short" }) + " " : "") + clock(s.utc, zz.tz));
+    });
+    const box = document.createElement("div"); box.className = "box"; box.textContent = "✓";
+    b.append(t, z, box);
+    b.onclick = () => {
+      if (!me) { $("msg").innerHTML = "<b>Pick your name first</b> (step 1)"; $("names").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+      picks.has(s.id) ? picks.delete(s.id) : picks.add(s.id);
+      lastSent = null; render();
+    };
+    el.append(b);
+  });
+}
+
+function renderTally() {
+  const el = $("tally"); el.innerHTML = "";
+  const counts = SLOTS.map(s => FRIENDS.filter(f => (answers[f.name] || []).includes(s.id)).length);
+  const answered = FRIENDS.filter(f => answers[f.name] !== undefined && (answers[f.name] || []).length).length;
+  const max = Math.max(0, ...counts);
+  $("tallyNote").textContent = answered + " of " + FRIENDS.length + " have answered.";
+  if (!answered) { const d = document.createElement("div"); d.className = "empty"; d.textContent = "No answers yet. Be the first."; el.append(d); return; }
+  SLOTS.forEach((s, i) => {
+    const r = document.createElement("div"); r.className = "row" + (max && counts[i] === max ? " top" : "");
+    const l = document.createElement("div"); l.className = "lbl"; l.textContent = fmt(s.utc, myTz, { weekday: "short" }) + " " + clock(s.utc, myTz);
+    const n = document.createElement("div"); n.className = "num"; n.textContent = counts[i];
+    const bar = document.createElement("div"); bar.className = "bar"; const fill = document.createElement("i"); fill.style.width = (counts[i] / FRIENDS.length * 100) + "%"; bar.append(fill);
+    const who = document.createElement("div"); who.className = "who";
+    who.textContent = FRIENDS.filter(f => (answers[f.name] || []).includes(s.id)).map(f => f.name).join(", ");
+    r.append(l, n, bar); if (who.textContent) r.append(who); el.append(r);
+  });
+}
+
+function renderDock() {
+  const send = $("send"), msg = $("msg");
+  send.className = "send";
+  if (sending) { send.disabled = true; send.textContent = "Sending…"; return; }
+  send.textContent = "Send";
+  if (!me) { send.disabled = true; msg.textContent = "Pick your name to start"; return; }
+  send.disabled = !configured;
+  if (lastSent === "ok") { send.className = "send done"; send.textContent = "Sent ✓"; msg.innerHTML = "<b>Saved, thanks " + me + "!</b> Change your mind? Tap and send again."; return; }
+  if (lastSent === "unsure") { msg.innerHTML = "<b>Sent</b>, but I couldn't confirm it. Refresh in a minute to check."; return; }
+  if (lastSent === "fail") { msg.innerHTML = "<b>That didn't go through.</b> Check your connection and try again."; return; }
+  const n = picks.size;
+  msg.innerHTML = "<b>" + me + "</b>: " + (n ? n + (n === 1 ? " time" : " times") + " picked" : "no times picked yet");
+}
+
+function render() { renderNames(); renderSlots(); renderTally(); renderDock(); }
+
+async function loadAnswers() {
+  if (!configured) { render(); return; }
+  try {
+    const r = await fetch(ENDPOINT + "?t=" + Date.now());
+    const j = await r.json();
+    answers = j.answers || {};
+    if (me && !lastSent && picks.size === 0) picks = new Set(answers[me] || []);
+  } catch (e) { /* keep page usable without the tally */ }
+  render();
+}
+
+$("send").onclick = async () => {
+  if (!me || sending || !configured) return;
+  sending = true; lastSent = null; renderDock();
+  const mine = SLOTS.map(s => s.id).filter(id => picks.has(id));
+  try {
+    await fetch(ENDPOINT, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: me, slots: mine }) });
+    await new Promise(r => setTimeout(r, 1500));
+    const r = await fetch(ENDPOINT + "?t=" + Date.now()); const j = await r.json();
+    answers = j.answers || answers;
+    const saved = (answers[me] || []).slice().sort().join(",");
+    lastSent = saved === mine.slice().sort().join(",") ? "ok" : "unsure";
+  } catch (e) { lastSent = "fail"; }
+  sending = false; render();
+};
+
+render();
+loadAnswers();
+</script>
+</body>
+</html>
